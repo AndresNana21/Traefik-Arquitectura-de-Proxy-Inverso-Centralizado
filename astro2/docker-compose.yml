@@ -1,0 +1,19 @@
+services:
+  astro-site:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: astro_app_container
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      # Aquí defines el dominio o host local para acceder
+      - "traefik.http.routers.astro.rule=Host(`astro.localhost`)"
+      - "traefik.http.routers.astro.entrypoints=web"
+      # El puerto 8080 es el que definimos en el Dockerfile (busybox)
+      - "traefik.http.services.astro.loadbalancer.server.port=8080"
+
+networks:
+  web:
+    external: true
