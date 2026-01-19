@@ -1,64 +1,56 @@
-Esta es una documentación para poder crear un proyecto de laravel y configurarlo para que funcione con traefik
+---
 
-( 1 ) primero que nada crea tu proyecto laravel con el siguente comando
+# 🐘 Despliegue de Laravel con Traefik
 
->>>>>>>>>
+Esta guía detalla los pasos para crear un proyecto de **Laravel 12** y configurarlo para funcionar bajo la arquitectura de proxy inverso centralizado con **Traefik**.
 
+---
+
+## 1. Creación del Proyecto
+Utilizaremos una imagen temporal de Composer para generar el proyecto sin necesidad de instalar dependencias locales en el sistema.
+
+```bash
 docker run --rm \
     -u $(id -u):$(id -g) \
     -v $(pwd):/app \
     composer:latest \
     composer create-project laravel/laravel:^12.0 mi-proyecto-laravel
 
->>>>>>>>>
+```
 
-como puedes ver el comando utiliza una imagen de composer:lates para crear el proyecto sin necesiad de instalar la tecnologia como paquete dentro de linux.
+---
 
-tambien se muestra el comando para crear el proyecto y especificar la vercion "^12.0" y tambien el nombe del proyecto que es "mi-proyecto-laravel".
+## 2. Configuración de Permisos (Linux)
 
+Dado que los archivos son creados por el contenedor, debemos ajustar los permisos para que Laravel pueda escribir en el almacenamiento y las bases de datos SQLite:
 
-( 2 ) una ves creado el proyecto, tienes que ejecutar los siguentes 2 comanos dentro de la raiz del poyecto para poder darle permisos a tu linux para editar los archivos de cache y el sqlite, ya que los proyectos creados con contenedores de lararvel son creados por el usuario de docker y no tu usuario combencional.
-
->>>>>>>>>
-
+```bash
 sudo chmod -R 777 storage bootstrap/cache
 sudo chmod -R 777 database/
 
->>>>>>>>>
+```
 
-( 3 )  tienes 2 opciones, o puedes copiar la carpeta y su contenido llamada Docker dentro de la rais del proyecto, o puedes crear los archivos manualmente.
+---
 
-recuerda revisarr el documento porque hay que hacer una configuración en los archivos docker-compose.yml y el Dockerfile
+## 3. Configuración de Docker
 
-crea la carpeta Docker y ingresa en ella
->>>>>>>>>
- 	mkdir Docker
-	cd Docker
->>>>>>>>>
+Crea una carpeta llamada `Docker` en la raíz de tu proyecto para organizar los archivos de configuración:
 
+```bash
+mkdir Docker && cd Docker
+touch docker-compose.yml Dockerfile nginx.conf
 
-(3.1)Crear los siguentes archivos 
->>>>>>>>>
-	touch docker-compose.yml Dockerfile nginx.conf
->>>>>>>>>
+```
 
+### 3.1 Docker Compose (`Docker/docker-compose.yml`)
 
-(3.2)primero seria editar el archivo docker.compose.yml 
->>>>>>>>>
-    nvim docker-compose.yml
->>>>>>>>>
+Define los servicios de la aplicación y la conexión con Traefik.
 
-el contendio de este archivo es el siguente:
-
-
-
-
->>>>>>>>>
-
+```yaml
 name: laravel-2
 
 services:
-  # El "motor" de PHP
+  # El "motor" de PHP-FPM
   app:
     build:
       context: ..
@@ -69,7 +61,7 @@ services:
     networks:
       - web
 
-  # El servidor Web (Nginx) que conecta con Traefik
+  # El servidor Web (Nginx)
   webserver:
     image: nginx:alpine
     container_name: laravel-2-web
@@ -80,7 +72,6 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      # Usamos la variable para el dominio
       - "traefik.http.routers.laravel-2.rule=Host(`laravel-2.localhost`)"
       - "traefik.http.routers.laravel-2.entrypoints=web"
       - "traefik.http.services.laravel-2.loadbalancer.server.port=80"
@@ -90,69 +81,49 @@ networks:
   web:
     external: true
 
->>>>>>>>>
+```
 
-El archivo docker-compose.yml sirve para indicar los servicios que usaremos para el proyecto y la conexion que tendremos con traefik
+> **Nota:** Cambia `laravel-2` por el nombre de tu proyecto. Asegúrate de que el Host coincida con el dominio que deseas usar.
 
-es importante que mies en cada lugar donde dice larave-1 y lo modifiques por el nombre de tu proyecto comunmente, pero lo mas importante es que no se repita con otos proyectos.
+### 3.2 Dockerfile (`Docker/Dockerfile`)
 
-tambien en el label "traefik.http.routers.laravel-2.rule=Host(`laravel-2.localhost`)" puedes colocar el dominio que quieras, siempre y cuando el dominio o sub dominio apunten a tu servidor donde se encunetre el traefik. 
+Personalizamos la imagen de PHP para incluir las extensiones necesarias de Laravel.
 
-mas adelante hablaremos de el nombre del contenedor laravel-2-app asi que tenlo en cuenta.
-
-
-(3.3) Edita el archivo Dockerfile
->>>>>>>>>
-    nvim Dockerfile
->>>>>>>>>
-
-este archivo lo usamos para configurar la imagen de php ya que por defecto no viene con todo lo que necesitamos para laravel, por eso le hacemos modificaciónes mediante este archivo.
-
-el contenio es el siguente:
-
->>>>>>>>>
+```dockerfile
 FROM php:8.4-fpm
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip
 
-# Instalar extensiones de PHP necesarias para Laravel
+# Instalar extensiones de PHP
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Directorio de trabajo
 WORKDIR /var/www
-
-# Copiar el proyecto
 COPY . /var/www
 
-# Dar permisos a la carpeta storage (vital en Laravel)
-# Cambia la línea 17 por esta:
+# Ajustar propiedad de carpetas críticas
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]
->>>>>>>>>
 
+```
 
+### 3.3 Configuración de Nginx (`Docker/nginx.conf`)
 
-(3.4) editar el archivo nginx.conf
+Configura cómo Nginx procesa las peticiones PHP y las comunica con el contenedor `app`.
 
->>>>>>>>>
-    nvim nginx.conf
->>>>>>>>>
-
-Dentro de este archivo pegaremos lo siguente
->>>>>>>>>
+```nginx
 server {
     listen 80;
     index index.php index.html;
-    root /var/www/public; # Laravel sirve desde /public
+    root /var/www/public;
 
     location ~ \.php$ {
         try_files $uri =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass laravel-2-app:9000; # Nombre del servicio en docker-compose
+        fastcgi_pass laravel-2-app:9000; # Debe coincidir con 'container_name' de la app
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
@@ -163,14 +134,24 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 }
->>>>>>>>>
 
-tomr en cuenta que tienes que modificar done ice larravel-2-app por el nombre del contenedo que colocaste en la linea mencionada en el archivo docker-compose.yml la cual es  container_name: laravel-2-app en el servicio de app osea el primer serrvicio, el nombre que coloques como nombre de contenedorr es el mismo que necesita nginx, esto con el fin de evitar errores como lo podria ser que las peticiones de una app se envien a otra.
+```
 
-( 4) por ultimo debes de ejecutar el siguente comando para que se creen las imagenes y contenedores.
+---
 
->>>>>>>>>
- docker compose up -d
->>>>>>>>>
+## 4. Despliegue
 
+Una vez configurados los archivos, sitúate dentro de la carpeta `Docker` y levanta los servicios:
+
+```bash
+docker compose up -d
+
+```
+
+---
+
+**⚠️ Importante:** El nombre definido en `fastcgi_pass` dentro de `nginx.conf` debe ser exactamente igual al `container_name` del servicio `app` en tu `docker-compose.yml`.
+
+
+---
 
