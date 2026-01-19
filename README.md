@@ -1,9 +1,9 @@
 ---
 
-```markdown
 # 🌐 Traefik Centralized Proxy Architecture
 
 Este proyecto implementa una arquitectura de **Proxy Inverso Centralizado** utilizando **Traefik v3**. Permite desplegar múltiples servicios (Astro, Laravel, etc.) de forma independiente, centralizando el tráfico y la gestión de dominios en un solo punto de entrada.
+
 
 ---
 
