@@ -58,6 +58,8 @@ CMD ["nginx", "-g", "daemon off;"]
 
 Este archivo gestiona el contenedor y su comunicación con el proxy **Traefik**.
 
+modifica la palabra **astro** dentro del archivo por el nombre de tu proyecto, para que no se repitan estas caracteristicas en otros proyectos, esto con el fin e evitar errores a la hora de desplegar proyectos.
+
 > **Nota:** Antes de levantar el servicio, asegúrate de tener creada la red externa:
 > `docker network create web`
 
