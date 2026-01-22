@@ -1,6 +1,6 @@
 # Documentación para poder desplegar un proyecto de laravel con filament
 
-Tienes que tener una cacrpeta llamada Docker en la cual vas a tener los isguentes archivos DockerFile Docker-compose.yml 
+Tienes que tener una cacrpeta llamada Docker en la cual vas a tener los siguentes archivos DockerFile Docker-compose.yml 
 nginx.conf
 ```Comands
 
@@ -144,10 +144,10 @@ server {
 
 ## configuración dentro del contenedor de app (php)
 
-Tenemos que jecutar los siguentes comandos con el fin de que les permitas a tu docker interactuar con los archivos necesarios.
+Tenemos que ejecutar los siguentes comandos con el fin de que les permitas a tu docker interactuar con los archivos necesarios.
 
 
-ingresarr al contenedor de php como el usaurio www-data
+ingresar al contenedor de php como el usaurio www-data
 ```comands
 docker exec -it -u www-data [name-containter] bash
 ```
@@ -176,7 +176,23 @@ sudo chown -R $USER:www-data .
 
 
 
+## Filament permisos
+
+al usar filament necesitas ingresar al contenedor de php en el cual se encunetra coposer para poder ejecutar comandos de filament, por lo que el siguente comando te permite ingresar a el contendor.
+
+recuerda cambiar el nombre laravel-3-app por el nombre del contenedorr php que le colocaste.
+
+```Comand
+docker exec -it lararvel-3-app bash
+```
+
+una ves ingreses al contenedor puedes ejecutar los comandos de laravel normal.
 
 
 
+en caso de crear resources panels etc, necesitas ejecutar el siguente comando en al raiz de tu proyecto fuera del contenedor para darle a tu usaurio de linux los pemisos para moificar los archivos.
+
+```comand
+sudo chown -R $USER:$USER .
+```
 

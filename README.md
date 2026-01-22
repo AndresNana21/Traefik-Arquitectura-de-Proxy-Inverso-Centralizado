@@ -43,9 +43,9 @@ Añadir que tambien se cuenta con mas documentación de como desplegar proyectos
 
 ## requerimientos
 
-* [wsl]("https://learn.microsoft.com/en-us/windows/wsl/instal")
-* [Docker par ubuntu]("https://docs.docker.com/engine/install/ubuntu/")
-* [Docker descktop]("https://docs.docker.com/desktop/")
+* [wsl](https://learn.microsoft.com/en-us/windows/wsl/instal)
+* [Docker par ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+* [Docker descktop](https://docs.docker.com/desktop/)
 
 ## 🛠️ Inicio Rápido
 
@@ -71,7 +71,7 @@ Cada tecnología tiene sus propios requerimientos de red y Docker. Hemos prepara
 | Tecnología | Guía de Despliegue |
 | --- | --- |
 | **Traefik Core** | [Ver notas técnicas](https://github.com/AndresNana21/Traefik-projects-docs/tree/main/traefik) |
-| **Astro** | [Ver documentación de Astro]("https://www.google.com/search?q=./documentation_about_docker_projects/astro/https://www.google.com/search?q=./documentation_about_docker_projects/astro/") |
+| **Astro** | [Ver documentación de Astro](https://www.google.com/search?q=./documentation_about_docker_projects/astro/https://www.google.com/search?q=./documentation_about_docker_projects/astro/) |
 | **Laravel** | [Ver documentación de Laravel](https://github.com/AndresNana21/Traefik-projects-docs/tree/main/documentation_about_docker_projects/laravel) |
 
 ---
